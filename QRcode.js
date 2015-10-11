@@ -66,7 +66,7 @@ var QRcode;
             for(i=0;i<mode;i++) { data.unshift(length%2); length=parseInt(length/2); }
             data.unshift(0);data.unshift(0);data.unshift(1);data.unshift(0); //插入8位字节模式指示符
             data.push(0); data.push(0); data.push(0); data.push(0);
-            for(i=0,j=(capacity[version][level]-data.length)/8;i<j;i++){
+            for(i=0,j=(capacity[version][level]-data.length)>>3;i<j;i++){
                 if(i%2==0){ data.push(1);data.push(1);data.push(1);data.push(0);data.push(1);data.push(1);data.push(0);data.push(0); }
                 else { data.push(0);data.push(0);data.push(0);data.push(1);data.push(0);data.push(0);data.push(0);data.push(1); }
             }
@@ -145,7 +145,7 @@ var QRcode;
         //胶片制作
         this.filmArray=[];
         (function(film,final,version){
-            var length=21+version*4,i, j,pixel=false,len,limit=length- 7,n,p,m;  //胶片的实际尺寸
+            var length=21+version*4,i, j,pixel=false,len,limit=length-7,n,p,m;  //胶片的实际尺寸
             for(i=0;i<length;i++){        //胶片初始化
                 film[i]=[];
                 for(j=0;j<length;j++){
@@ -192,17 +192,17 @@ var QRcode;
             context.drawImage(image,0,0,size,size); //写入图像花了10ms左右
             var imageData=context.getImageData(0,0,size,size),data=imageData.data,i,row=0,col=0,value,left,right,len;
             for(i=0;i<filmLength;i++) {  time[i]=times; }
-            var mid=(filmLength-1)/2;
+            var mid=(filmLength-1)>>1;
             if(gap>=(mid+1)){     //调整像素单元的长宽比例适应容器
                 for(i=0;i<filmLength;i+=2){ time[i]++; }
                 if(gap-mid-1>0){
-                    left=mid-floor(((gap-mid-1)/2))*2-1;right=mid+floor(((gap-mid)/2))*2-3;
+                    left=mid-(((gap-mid-1)>>1)<<1)-1;right=mid+(((gap-mid)>>1)<<1)-3;
                     for(i=left;i<=right;i+=2){ time[i]++; }
                 }
             }
             else {
                 if(gap>0){
-                    left=mid-floor((gap/2))*2;right=mid+floor(((gap+1)/2))*2-2;
+                    left=mid-((gap>>1)<<1);right=mid+(((gap+1)>>1)<<1)-2;
                     for(i=left;i<=right;i+=2){ time[i]++; }
                 }
             }
