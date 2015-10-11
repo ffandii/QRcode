@@ -53,7 +53,7 @@ var QRcode;
                 [2592,2032,1440,1120],[2960,2320,1648,1264],[3424,2672,1952,1440],[3688,2920,2088,1576],[4184,3320,2360,1784],[4712,3624,2600,2024],[5176,4056,2936,2264],[5768,4504,3176,2504],[6360,5016,3560,2728],[6888,5352,3880,3080],
                 [7456,5712,4096,3248],[8048,6256,4544,3536],[8752,6880,4912,3712],[9392,7312,5312,4112],[10208,8000,5744,4304],[10960,8496,6032,4768],[11744,9024,6464,5024],[12248,9544,6968,5288],[13048,10136,7288,5608],[13880,10984,7880,5960],
                 [14744,11640,8264,6344],[15640,12328,8920,6760],[16568,13048,9368,7208],[17528,13800,9848,7688],[18448,14496,10288,7888],[19472,15312,10832,8432],[20528,15936,11408,8768],[21616,16816,12016,9136],[22496,17728,12656,9776],[23648,18672,13328,10208]];
-            var length=text.length,lt1=12+8*length,lt2=20+8*length, i,j,mode,version;
+            var length=text.length,lt1=12+(length<<3),lt2=lt1+8, i,j,mode,version;
             if(lt2>capacity[39][level]){ throw new Error("Input text is too long!"); }
             for(i=0;i<40;i++){                          //此时版本i刚好能装下输入的数据
                 if(capacity[i][level]<=(i<=8?lt1:lt2)){} else{ version=i; mode=version>8?16:8; break; }
@@ -62,7 +62,7 @@ var QRcode;
                 var value=text.charCodeAt(i); if(value>127){ throw new Error("Input charset limit: ASCII"); }
                 var bit=0x80; for(j=0;j<8;j++){ data.push(!!(bit&value)); bit>>=1; }
             }
-            for(i=0;i<mode;i++) { data.unshift(length%2); length=parseInt(length/2); }
+            for(i=0;i<mode;i++) { data.unshift(length%2); length=length>>1; }
             data.unshift(0);data.unshift(0);data.unshift(1);data.unshift(0); //插入8位字节模式指示符
             data.push(0); data.push(0); data.push(0); data.push(0);
             for(i=0,j=(capacity[version][level]-data.length)>>3;i<j;i++){
