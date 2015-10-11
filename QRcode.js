@@ -18,7 +18,6 @@ var QRcode;
     var floor=window.Math.floor,
         Number=window.Number,
         isNaN=window.isNaN,
-        alert=window.alert,
         document=window.document,
         parseInt=window.parseInt;
 
