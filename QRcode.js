@@ -64,7 +64,12 @@ var QRcode;
                 var bit=0x80; for(j=0;j<8;j++){ data.push(!!(bit&value)); bit>>=1; }
             }
             for(i=0;i<mode;i++) { data.unshift(length%2); length=parseInt(length/2); }
-            data.unshift(0);data.unshift(0);data.unshift(1);data.unshift(0);
+            data.unshift(0);data.unshift(0);data.unshift(1);data.unshift(0); //插入8位字节模式指示符
+            data.push(0); data.push(0); data.push(0); data.push(0);
+            for(i=0,j=(capacity[version][level]-data.length)/8;i<j;i++){
+                if(i%2==0){ data.push(1);data.push(1);data.push(1);data.push(0);data.push(1);data.push(1);data.push(0);data.push(0); }
+                else { data.push(0);data.push(0);data.push(0);data.push(1);data.push(0);data.push(0);data.push(0);data.push(1); }
+            }
             that.version=version;
         })(this.dataStream,this.options["text"],this.options["level"],this);
 
@@ -135,7 +140,6 @@ var QRcode;
                     }
                 }
             }
-            alert(data.length+'  '+errorStream.length+"   "+version);
         })(this.dataStream,this.finalStream,this.version,this.options["level"]);
 
         //胶片制作
