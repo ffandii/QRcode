@@ -8,7 +8,7 @@ var QRcode;
     //默认参数设置
     var defaultOpt={
         text: "",
-        level: 0,     //L:0 M:1 Q:2 H:2
+        level: 0,     //L:0 M:1 Q:2 H:3
         size: 278,
         foreColor: "#000000",   //前景色默认为黑色
         backColor: "#FFFFFF"   //背景色默认为白色
