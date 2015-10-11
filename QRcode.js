@@ -241,11 +241,10 @@ var QRcode;
         },
 
         showDataStream: function(){
-            var str="0 1 0 0<br>";
-            for(var i=4;i<this.dataStream.length;i++){
-                str+=(this.dataStream[i]==true?1:0)+" "+((i-3)%8==0?"<br>":"");
+            for(var i= 0,len=this.dataStream.length;i<len;i++){
+                document.write((this.dataStream[i]==true?1:0)+"  ");
+                if(i>0&&(i+1)%8==0) { document.write("<br>") }
             }
-            document.write(str);
         }
     };
 
