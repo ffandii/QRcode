@@ -139,6 +139,38 @@ var QRcode;
                     }
                 }
             }
+
+            var dArr=[],eArr=[];  //分别用来存储数据字符和纠错字符
+            value=piece[0];real=value+piece[1];
+            for(m=0;m<2;m++){
+                for(i=(m==0)?0:value,len=(m==0)?value:real;i<len;i++){
+                    dArr[i]=[];
+                    for(j=0,num=dataNum[m];j<num;j++){
+                        for(n=0;n<8;n++){ dArr[i][(j<<3)+n]=data.unshift(); }
+                    }
+                }
+            }
+            for(i=0;i<real;i++){
+                eArr[i]=[];
+                for(j=0;j<correct;j++){
+                    for(n=0;n<8;n++){ eArr[i][(j<<3)+n]=errorStream.unshift(); }
+                }
+            }
+            for(j=0,num=dataNum[0];j<num;j++){
+                for(i=0;i<real;i++){
+                    for(n=0;n<8;n++){ final.push(dArr[i][(j<<3)+n]); }
+                }
+            }
+            num=dataNum[0]<<3;
+            for(i=value;i<real;i++){
+                for(n=0;n<8;n++){ final.push(dArr[i][num+n]); }
+            }
+            for(j=0;j<correct;j++){
+                for(i=0;i<real;i++){
+                    for(n=0;n<8;n++){ final.push(eArr[i][(j<<3)+n]); }
+                }
+            }
+            for(i=0,len=bits[version];i<len;i++){ final.push(0); }
         })(this.dataStream,this.finalStream,this.version,this.options["level"]);
 
         //胶片制作
