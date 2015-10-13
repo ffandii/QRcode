@@ -144,15 +144,15 @@ var QRcode;
             for(m=0;m<2;m++){
                 for(i=(m==0)?0:value,len=(m==0)?value:real;i<len;i++){
                     dArr[i]=[];
-                    for(j=0,num=dataNum[m];j<num;j++){
-                        for(n=0;n<8;n++){ dArr[i][(j<<3)+n]=data.unshift(); }
+                    for(j=0,num=dataNum[m];j<num;j++){  //shift()方法把数组的第一个元素删除并且返回第一个元素
+                        for(n=0;n<8;n++){ dArr[i][(j<<3)+n]=data.shift(); }
                     }
                 }
             }
             for(i=0;i<real;i++){
                 eArr[i]=[];
                 for(j=0;j<correct;j++){
-                    for(n=0;n<8;n++){ eArr[i][(j<<3)+n]=errorStream.unshift(); }
+                    for(n=0;n<8;n++){ eArr[i][(j<<3)+n]=errorStream.shift(); }
                 }
             }
             for(j=0,num=dataNum[0];j<num;j++){
