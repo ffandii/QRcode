@@ -103,7 +103,7 @@ var QRcode;
                 117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175];
 
             var errorStream=[],info=errorInfo[level][version],at,w=0,i,j,len,num,b=[],t=[],m,n,c,value,zone,real;  //纠错码字的0/1数据流
-            var dataNum=[info[2],info[3]=="undefined"?0:(1+info[2])],piece=[info[0],info[3]=="undefined"?0:info[3]],correct=info[1]-info[2];
+            var dataNum=[info[2],info[3]==undefined?0:(1+info[2])],piece=[info[0],info[3]==undefined?0:info[3]],correct=info[1]-info[2];
             for(i=0,len=co.length;i<len;i++){
                 if(co[i][0]==correct) { at=i; break; }
             }
@@ -139,7 +139,6 @@ var QRcode;
                     }
                 }
             }
-
             var dArr=[],eArr=[];  //分别用来存储数据字符和纠错字符
             value=piece[0];real=value+piece[1];
             for(m=0;m<2;m++){
