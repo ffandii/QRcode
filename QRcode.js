@@ -48,7 +48,7 @@ var QRcode;
 
         //将输入字符串转化为0/1编码的数据流
         this.dataStream=[];  //0-1数据流
-        (function(data,text,level,that){
+        (function(data,text,level,that){  //10ms
             var capacity=[[152,128,104,72],[272,224,176,128],[440,352,272,208],[640,512,384,288],[864,688,496,368],[1088,864,608,480],[1248,992,704,528],[1552,1232,880,688],[1856,1456,1056,800],[2192,1728,1232,976],
                 [2592,2032,1440,1120],[2960,2320,1648,1264],[3424,2672,1952,1440],[3688,2920,2088,1576],[4184,3320,2360,1784],[4712,3624,2600,2024],[5176,4056,2936,2264],[5768,4504,3176,2504],[6360,5016,3560,2728],[6888,5352,3880,3080],
                 [7456,5712,4096,3248],[8048,6256,4544,3536],[8752,6880,4912,3712],[9392,7312,5312,4112],[10208,8000,5744,4304],[10960,8496,6032,4768],[11744,9024,6464,5024],[12248,9544,6968,5288],[13048,10136,7288,5608],[13880,10984,7880,5960],
@@ -75,7 +75,6 @@ var QRcode;
         //纠错编码，组合数据码和纠错码
         this.finalStream=[];
         (function(data,final,version,level){
-
             var bits=[0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0]; //码字填充后的剩余位
 
             var errorInfo=[[[1,26,19],[1,44,34],[1,70,55],[1,100,80],[1,134,108],[2,86,68],[2,98,78],[2,121,97],[2,146,116],[2,86,68,2],[4,101,81],[2,116,92,2],[4,133,107],[3,145,115,1],[5,109,87,1],[5,122,98,1],[1,135,107,5], [5,150,120,1],[3,141,113,4],[3,135,107,5],[4,144,116,4],[2,139,111,7],[4,151,121,5],[6,147,117,4],[8,132,106,4],[10,142,114,2],[8,152,122,4],[3,147,117,10],
@@ -115,18 +114,18 @@ var QRcode;
                     for(m=0;m<num;m++){   //纠错码字编码电路
                         value=0;
                         for(n=0;n<8;n++){
-                            value<<=1; value+=b[correct-1][n]^data[w]; w++;
+                            value=value<<1; value=value+b[correct-1][n]^data[w]; w++;
                         }
                         zone=v2a[value];
                         for(n=1;n<correct;n++){
                             real=a2v[(zone+co[at][n+1])%255];
                             for(c=7;c>=0;c--){
-                                t[n][c]=b[n-1][c]^(real%2); real>>=1;
+                                t[n][c]=b[n-1][c]^(real%2); real=real>>1;
                             }
                         }
                         real=a2v[(zone+co[at][1])%255];  //首位值得更新
                         for(c=7;c>=0;c--){
-                            t[0][c]=real%2; real>>=1;    //存储中间值
+                            t[0][c]=real%2; real=real>>1;    //存储中间值
                         }
                         for(n=0;n<correct;n++){
                             for(c=0;c<8;c++) { b[n][c]=t[n][c]; }
@@ -222,11 +221,23 @@ var QRcode;
                     for(j=0;j<3;j++){ map[length-11+j][i]=map[i][length-11+j]=0; }
                 }
             }
-            
+
+            i=j=length-1; n=0; m=false;//初始化写入位置，0↑ 1↓
+            while(final.length>0){  //数据写入到filmArray中
+                if(i==-1){ i=0; j=j==8?5:j-2; n=1; }
+                else if(i==length) { i=length-1; j-=2; n=0; }
+                if(map[i][j]!=0){ final.shift(); map[i][j]=128; }
+                if(n==0){
+                    i=m==false?i:i-1; j=m==false?j-1:j+1; m=!m;
+                }
+                else {
+                    i=m==false?i:i+1; j=m==false?j-1:j+1; m=!m;
+                }
+            }
         })(this.filmArray,this.map,this.finalStream,this.version);
 
         //胶片放映
-        (function(film,options,selector){
+        (function(film,options,selector){ //46ms
             var size=options["size"],filmLength=film.length,times=floor(size/filmLength),gap=size%(times*filmLength),time=[];
             var container=document.body.querySelector(selector);  //获取容器元素的DOM引用
             if(container==null) { throw new Error("Element not found!"); }
