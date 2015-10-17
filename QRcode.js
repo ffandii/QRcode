@@ -3,7 +3,7 @@
  * Created by ffandii on 2015-10-02.
  */
 var QRcode;
-(function(window){
+(function( window ){
 
     //默认参数设置
     var defaultOpt = {
@@ -21,100 +21,99 @@ var QRcode;
         document = window.document,
         parseInt = window.parseInt;
 
-    QRcode = function(opt,selector){
+    QRcode = function( opt, selector ){
         this.version = 0; //默认版本为0,0-39
         //options为QRcode对象的实例属性
         this.options = {};
-        (function(set,options,opt){
+        (function( set, options, opt ){
             var expColor = /^([#])+([a-zA-Z0-9]{6})+$/g; //验证颜色
             for(var key in set){
-                var value = opt[key],type = typeof value;
-                if(type!="undefined"&&type!="function"&&type!="object"){
-                    //options[key]=opt[key];
-                    switch(key){
-                        case "text": options["text"] = value.toString();
+                var value = opt[key], type = typeof value;
+                if(type != "undefined" && type != "function" && type != "object" ){
+                    switch( key ){
+                        case "text" : options["text"] = value.toString();
                             break;
-                        case "level": value = value.toString().toLowerCase();
-                            options["level"] = value=="l"?0:value=="m"?1:value=="q"?2:3;
+                        case "level" : value = value.toString().toLowerCase();
+                            options["level"] = value == "l" ? 0 : value == "m" ? 1 : value == "q" ? 2 : 3;
                             break;
-                        case "size": var tmp = floor(Number(value));
-                            options["size"] = isNaN(Number(value))==false?(tmp<177?177:tmp>885?885:tmp):set["size"];
+                        case "size" : var tmp = floor(Number(value));
+                            options["size"] = isNaN( Number(value) ) == false ? ( tmp < 177 ? 177 : tmp > 885 ? 885 :tmp ) : set["size"];
                             break;
-                        case "foreColor": options["foreColor"] = expColor.test(value)==true?value:set["foreColor"];
+                        case "foreColor" : options["foreColor"] = expColor.test(value) == true ? value : set["foreColor"];
                             break;
-                        case "backColor": expColor.lastIndex = 0;
-                            options["backColor"] = expColor.test(value)==true?value:set["backColor"];
+                        case "backColor" : expColor.lastIndex = 0;
+                            options["backColor"] = expColor.test(value) == true ? value : set["backColor"];
                             break;
                     }
                 }
                 else {
-                    options[key]=set[key];
+                    options[key] = set[key];
                 }
             }
 
-            if(options["text"]==""){
+            if( options["text"] == "" ){
                 throw new Error("Input text can't be null!");
             }
 
-        })(defaultOpt,this.options,opt);
+        })( defaultOpt, this.options, opt );
 
         //将输入字符串转化为0/1编码的数据流
         this.dataStream = [];  //0-1数据流
-        (function(data,text,level,that){  //10ms
+        (function( data, text, level, that){  //10ms
 
             var capacity = [[152,128,104,72],[272,224,176,128],[440,352,272,208],[640,512,384,288],[864,688,496,368],[1088,864,608,480],[1248,992,704,528],[1552,1232,880,688],[1856,1456,1056,800],[2192,1728,1232,976],
                 [2592,2032,1440,1120],[2960,2320,1648,1264],[3424,2672,1952,1440],[3688,2920,2088,1576],[4184,3320,2360,1784],[4712,3624,2600,2024],[5176,4056,2936,2264],[5768,4504,3176,2504],[6360,5016,3560,2728],[6888,5352,3880,3080],
                 [7456,5712,4096,3248],[8048,6256,4544,3536],[8752,6880,4912,3712],[9392,7312,5312,4112],[10208,8000,5744,4304],[10960,8496,6032,4768],[11744,9024,6464,5024],[12248,9544,6968,5288],[13048,10136,7288,5608],[13880,10984,7880,5960],
                 [14744,11640,8264,6344],[15640,12328,8920,6760],[16568,13048,9368,7208],[17528,13800,9848,7688],[18448,14496,10288,7888],[19472,15312,10832,8432],[20528,15936,11408,8768],[21616,16816,12016,9136],[22496,17728,12656,9776],[23648,18672,13328,10208]];
 
-            var length=text.length, lt1=12+(length<<3),  lt2=lt1+8, i , j , mode , version;
+            var length = text.length, lt1 = 12+(length<<3),  lt2=lt1+8, i , j , mode , version;
 
-            if(lt2>capacity[39][level]) {
+            if( lt2 > capacity[39][level] ) {
                 throw new Error("Input text is too long!");
             }
 
-            for(i=0;i<40;i++){                          //此时版本i刚好能装下输入的数据
-                if(capacity[i][level]<=(i<=8?lt1:lt2)){
+            for( i = 0; i < 40; i++ ) {                          //此时版本i刚好能装下输入的数据
+                if( capacity[i][level] <= ( i<=8 ? lt1 : lt2 ) ) {
                 } else{
-                    version = i; mode = version>8?16:8; break;
+                    version = i; mode = version > 8 ? 16 : 8; break;
                 }
             }
 
-            for(i=0;i<length;i++){
+            for( i = 0; i< length; i++ ) {
                 var value = text.charCodeAt(i);
-                if(value>127){
+                if( value > 127 ) {
                     throw new Error("Input charset limit: ASCII");
                 }
-                var bit=0x80;
-                for(j=0;j<8;j++){
-                    data.push(!!(bit&value)); bit>>=1;
+                var bit = 0x80;
+                for( j = 0; j < 8; j++ ) {
+                    data.push( !! ( bit & value ) ); bit >>= 1;
                 }
             }
 
-            for(i=0;i<mode;i++) {
-                data.unshift(length%2);
-                length=length>>1;
+            for( i = 0; i < mode; i++ ) {
+                data.unshift( length % 2 );
+                length = length >> 1;
             }
 
-            data.unshift(0);data.unshift(0);data.unshift(1);data.unshift(0); //插入8位字节模式指示符
+            data.unshift(0); data.unshift(0); data.unshift(1); data.unshift(0); //插入8位字节模式指示符
             data.push(0); data.push(0); data.push(0); data.push(0);
-            for(i=0,j=(capacity[version][level]-data.length)>>3;i<j;i++){
-                if(i%2==0){
-                    data.push(1);data.push(1);data.push(1);data.push(0);
-                    data.push(1);data.push(1);data.push(0);data.push(0);
+            for( i = 0,j = ( capacity[version][level] - data.length ) >> 3; i < j; i++ ){
+                if( i % 2 == 0) {
+                    data.push(1); data.push(1); data.push(1); data.push(0);
+                    data.push(1); data.push(1); data.push(0); data.push(0);
                 } else {
-                    data.push(0);data.push(0);data.push(0);data.push(1);
-                    data.push(0);data.push(0);data.push(0);data.push(1);
+                    data.push(0); data.push(0); data.push(0); data.push(1);
+                    data.push(0); data.push(0); data.push(0); data.push(1);
                 }
             }
 
-            that.version=version;
+            that.version = version;
 
-        })(this.dataStream,this.options["text"],this.options["level"],this);
+        })( this.dataStream, this.options["text"], this.options["level"], this );
 
         //纠错编码，组合数据码和纠错码
         this.finalStream = [];
-        (function(data,final,version,level){
+        (function( data, final, version, level){
 
             var bits = [0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0]; //码字填充后的剩余位
 
@@ -142,207 +141,213 @@ var QRcode;
                 132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,
                 117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175];
 
-            var errorStream=[],info=errorInfo[level][version],
-                at,w=0,i,j,len,num,b=[],t=[],m,n,c,value,zone,real;  //纠错码字的0/1数据流
+            var errorStream = [],info = errorInfo[level][version],
+                at, w = 0, i, j, len, num, b = [], t = [], m, n, c, value, zone, real;  //纠错码字的0/1数据流
 
-            var dataNum = [info[2],info[3]==undefined?0:(1+info[2])],
-                piece = [info[0],info[3]==undefined?0:info[3]],
-                correct = info[1]-info[2];
+            var dataNum = [ info[2], info[3] == undefined ? 0 : ( 1 + info[2] ) ],
+                piece = [ info[0], info[3] == undefined ? 0 : info[3] ],
+                correct = info[1] - info[2];
 
-            for(i=0,len=co.length;i<len;i++){
-                if(co[i][0]==correct) {
-                    at=i; break;
+            for( i=0, len = co.length; i < len; i++ ) {
+                if( co[i][0] == correct ) {
+                    at = i; break;
                 }
             }
 
-            for(i=0,num=dataNum[i];i<2&&num!=0;i++){   //第一块以及可能的第二块
-                for(j=0,len=piece[i];j<len;j++){   //每一块的分数
+            for( i = 0, num = dataNum[i]; i < 2 && num != 0; i++ ) {   //第一块以及可能的第二块
+                for( j = 0, len = piece[i]; j < len;j++ ) {   //每一块的分数
 
-                    for(m=0;m<correct;m++){
-                        b[m]=[]; t[m]=[];
-                        for(n=0;n<8;n++) {
-                            b[m][n]=false;
+                    for( m = 0; m < correct; m++ ) {
+                        b[m] = []; t[m] = [];
+                        for( n = 0; n < 8; n++ ) {
+                            b[m][n] = false;
                         }
                     }
 
-                    for(m=0;m<num;m++){   //纠错码字编码电路
-                        value=0;
-                        for(n=0;n<8;n++){
-                            value = value<<1;
-                            value = value+b[correct-1][n]^data[w]; w++;
+                    for( m = 0; m < num; m++ ) {   //纠错码字编码电路
+                        value = 0;
+                        for( n = 0; n < 8; n++ ) {
+                            value = value << 1;
+                            value = value + b[correct-1][n] ^ data[w];
+                            w++;
                         }
 
-                        zone=v2a[value];
-                        for(n=1;n<correct;n++){
-                            real = a2v[(zone+co[at][n+1])%255];
-                            for(c=7;c>=0;c--){
-                                t[n][c] = b[n-1][c]^(real%2); real = real>>1;
+                        zone = v2a[value];
+                        for( n = 1; n < correct; n++ ) {
+                            real = a2v[ ( zone + co[at][ n + 1 ] ) % 255 ];
+                            for( c = 7; c >= 0; c-- ) {
+                                t[n][c] = b[n - 1][c] ^ ( real % 2 );
+                                real = real >> 1;
                             }
                         }
 
-                        real = a2v[(zone+co[at][1])%255];  //首位值得更新
-                        for(c=7;c>=0;c--){
-                            t[0][c] = real%2; real=real>>1;    //存储中间值
+                        real = a2v[ ( zone + co[at][1] ) % 255 ];  //首位值得更新
+                        for( c = 7; c >= 0; c-- ) {
+                            t[0][c] = real % 2;
+                            real = real >> 1;    //存储中间值
                         }
 
-                        for(n=0;n<correct;n++){
-                            for(c=0;c<8;c++) {
-                                b[n][c]=t[n][c];
+                        for( n = 0; n < correct; n++ ) {
+                            for( c = 0; c < 8; c++ ) {
+                                b[n][c] = t[n][c];
                             }
                         }
                     }
 
-                    for(n=correct-1;n>=0;n--){
-                        for(c=0;c<8;c++){
+                    for( n = correct-1; n >= 0; n-- ) {
+                        for( c = 0;c < 8; c++ ) {
                             errorStream.push(b[n][c]);
                         }
                     }
                 }
             }
-            var dArr=[],eArr=[];  //分别用来存储数据字符和纠错字符
-            value=piece[0];real=value+piece[1];
-            for(m=0;m<2;m++){
-                for(i=(m==0)?0:value,len=(m==0)?value:real;i<len;i++){
-                    dArr[i]=[];
-                    for(j=0,num=dataNum[m];j<num;j++){  //shift()方法把数组的第一个元素删除并且返回第一个元素
-                        for(n=0;n<8;n++){
-                            dArr[i][(j<<3)+n]=data.shift();
+
+            var dArr = [], eArr = [];  //分别用来存储数据字符和纠错字符
+            value = piece[0]; real = value + piece[1];
+            for( m = 0; m < 2; m++ ) {
+                for( i = ( m == 0 ) ? 0 : value, len = ( m == 0 ) ? value : real; i < len; i++ ) {
+                    dArr[i] = [];
+                    for( j = 0, num = dataNum[m]; j < num; j++ ) {  //shift()方法把数组的第一个元素删除并且返回第一个元素
+                        for( n = 0; n < 8; n++ ){
+                            dArr[i][ ( j << 3 ) + n ] = data.shift();
                         }
                     }
                 }
             }
 
-            for(i=0;i<real;i++){
-                eArr[i]=[];
-                for(j=0;j<correct;j++){
-                    for(n=0;n<8;n++){
-                        eArr[i][(j<<3)+n]=errorStream.shift();
+            for( i=0; i < real; i++ ) {
+                eArr[i] = [];
+                for( j = 0; j < correct; j++ ) {
+                    for( n = 0; n < 8; n++ ) {
+                        eArr[i][ ( j << 3 ) + n ] = errorStream.shift();
                     }
                 }
             }
 
-            for(j=0,num=dataNum[0];j<num;j++){
-                for(i=0;i<real;i++){
-                    for(n=0;n<8;n++){ final.push(dArr[i][(j<<3)+n]); }
-                }
-            }
-
-            num=dataNum[0]<<3;
-            for(i=value;i<real;i++){
-                for(n=0;n<8;n++){
-                    final.push(dArr[i][num+n]);
-                }
-            }
-
-            for(j=0;j<correct;j++){
-                for(i=0;i<real;i++){
-                    for(n=0;n<8;n++){
-                        final.push(eArr[i][(j<<3)+n]);
+            for( j = 0, num = dataNum[0]; j < num; j++ ) {
+                for( i= 0; i < real; i++ ) {
+                    for( n = 0; n < 8; n++ ) {
+                        final.push( dArr[i][ ( j<<3 ) + n ] );
                     }
                 }
             }
 
-            for(i=0,len=bits[version];i<len;i++){
+            num = dataNum[0] << 3;
+            for( i = value; i < real; i++ ) {
+                for( n = 0; n < 8; n++ ) {
+                    final.push(dArr[i][num + n]);
+                }
+            }
+
+            for( j = 0; j < correct; j++ ) {
+                for( i = 0; i < real; i++ ) {
+                    for( n = 0; n < 8; n++ ) {
+                        final.push(eArr[i][ ( j << 3) + n ]);
+                    }
+                }
+            }
+
+            for( i = 0, len = bits[version]; i < len; i++ ) {
                 final.push(0);
             }
-        })(this.dataStream,this.finalStream,this.version,this.options["level"]);
+        })( this.dataStream, this.finalStream, this.version, this.options["level"] );
 
         //胶片制作
-        this.filmArray=[];this.map=[]; //map为参看图形
-        (function(film,map,final,version){
-            var length=21+version*4,i, j,pixel=false,len,limit=length-7,n,p,m;  //胶片的实际尺寸
-            for(i=0;i<length;i++){        //胶片初始化
-                film[i]=[]; map[i]=[];
-                for(j=0;j<length;j++){
-                    film[i][j]=true;      //true代表白色的模块
-                    map[i][j]=255;
+        this.filmArray = []; this.map = []; //map为参看图形
+        (function( film, map, final, version ) {
+            var length = 21 + version * 4, i, j, pixel = false, len, limit = length - 7, n, p, m;  //胶片的实际尺寸
+            for( i = 0; i < length; i++ ) {        //胶片初始化
+                film[i] = []; map[i] = [];
+                for( j = 0; j < length; j++ ) {
+                    film[i][j] = true;      //true代表白色的模块
+                    map[i][j] = 255;
                 }
             }
 
-            for(i=0;i<7;i++){             //生成位置探测图形
-                for(j=0;j<7;j++){
-                    if((i==0||j==0||i==6||j==6)||(i>=2&&i<=4&&j>=2&&j<=4)) {
-                        film[i][j]=film[i][limit+j]=film[limit+i][j]=false;
+            for( i = 0; i < 7; i++ ) {             //生成位置探测图形
+                for( j = 0; j < 7; j++ ) {
+                    if( ( i == 0 || j == 0 || i == 6 || j == 6 ) || ( i >= 2 && i <= 4 && j >= 2 && j <= 4 ) ) {
+                        film[i][j] = film[i][limit + j] = film[limit + i][j] = false;
                     }
                 }
             }
 
-            for(j=6;j<=limit;j++){     //生成定位图形
-                if(pixel==false) {
-                    film[j][6]=film[6][j]=false;
+            for( j = 6; j <= limit; j++ ) {     //生成定位图形
+                if( pixel == false ) {
+                    film[j][6] = film[6][j] = false;
                 }
-                pixel=!pixel;
-                if(j>=8&&j<=limit-2){
-                    map[j][6]=map[6][j]=0;
+                pixel = ! pixel;
+                if( j >= 8 && j <= limit - 2 ) {
+                    map[j][6] = map[6][j] = 0;
                 }
             }
 
-            var axis=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],
+            var axis = [[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],
                 [6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],
                 [6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]];
 
-            for(i=0,len=axis[version].length;i<len;i++){
-                for(j=0;j<len;j++){
-                    n=axis[version][i];p=axis[version][j];
-                    if(!((n==6||n==limit)&&(p==6||p==limit))||(n==limit&&p==limit)){
-                        film[n][p]=false;
-                        for(m=0;m<5;m++){
-                            film[n-2+m][p-2]=film[n-2+m][p+2]=film[n-2][p-2+m]=film[n+2][p-2+m]=false;
-                            map[n-2+m][p-2]=map[n-2+m][p-1]=map[n-2+m][p]=map[n-2+m][p+1]=map[n-2+m][p+2]=0;
+            for( i = 0, len = axis[version].length; i < len; i++ ) {
+                for( j = 0; j < len; j++ ) {
+                    n = axis[version][i]; p = axis[version][j];
+                    if( ! (( n == 6 || n == limit ) && ( p == 6 || p == limit )) || ( n == limit && p == limit )) {
+                        film[n][p] = false;
+                        for( m = 0; m < 5; m++ ) {
+                            film[n - 2 + m][p - 2] = film[n - 2 + m][p + 2] = film[n - 2][p - 2 + m] = film[n + 2][p - 2 + m] = false;
+                            map[n - 2 + m][p - 2] = map[n - 2 + m][p - 1] = map[n - 2 + m][p] = map[n - 2 + m][p + 1] = map[n - 2 + m][p + 2] = 0;
                         }
                     }
                 }
             }
 
-            for(i=0;i<=7;i++){  //参考图形的初始化
-                for(j=0;j<=7;j++){
-                    map[i][j] = map[length-8+i][j] = map[i][length-8+j]=0;
+            for( i = 0; i <= 7; i++ ) {  //参考图形的初始化
+                for( j = 0;j <= 7; j++) {
+                    map[i][j] = map[length - 8 + i][j] = map[i][length - 8 + j] = 0;
                 }
-                map[8][length-8+i] = map[length-8+i][8] = 0;
+                map[8][length - 8 + i] = map[length - 8 + i][8] = 0;
             }
 
-            for(i=0;i<=8;i++){
-                map[i][8] = map[8][i]=0;
+            for( i = 0; i <= 8; i++ ) {
+                map[i][8] = map[8][i] = 0;
             }
-            if(version>=6){
-                for(i=0;i<6;i++){
-                    for(j=0;j<3;j++){
-                        map[length-11+j][i] = map[i][length-11+j]=0;
+            if( version >= 6 ) {
+                for( i = 0; i < 6; i++ ) {
+                    for( j = 0; j < 3; j++ ) {
+                        map[length - 11 + j][i] = map[i][length - 11 + j] = 0;
                     }
                 }
             }
 
-            i=j=length-1; n=0; m=false;//初始化写入位置，0↑ 1↓
-            while(final.length>0){  //数据写入到filmArray中
-                if(i==-1){
-                    i=0; j = j==8?5:j-2; n=1;
-                } else if(i==length) {
-                    i=length-1; j-=2; n=0;
+            i = j = length - 1; n = 0; m = false;//初始化写入位置，0↑ 1↓
+            while( final.length > 0 ) {  //数据写入到filmArray中
+                if( i == -1 ) {
+                    i = 0; j = j == 8 ? 5 : j - 2; n = 1;
+                } else if( i == length ) {
+                    i = length - 1; j -= 2; n = 0;
                 }
-                if(map[i][j]!=0){
-                    film[i][j]=!final.shift();
+                if( map[i][j] != 0) {
+                    film[i][j] = ! final.shift();
                 }
-                if(n==0){
-                    i=m==false?i:i-1; j=m==false?j-1:j+1;
+                if( n==0 ) {
+                    i = m == false ? i : i - 1; j = m == false ? j - 1 : j + 1;
                 } else {
-                    i=m==false?i:i+1; j=m==false?j-1:j+1;
+                    i = m == false ? i : i + 1; j = m == false ? j - 1 : j + 1;
                 }
-                m=!m;
+                m = ! m;
             }
 
-        })(this.filmArray,this.map,this.finalStream,this.version);
+        })( this.filmArray, this.map, this.finalStream, this.version );
 
         //胶片放映
-        (function(film,options,selector){ //46ms
-            var size = options["size"],filmLength = film.length,
-                times = floor(size/filmLength),gap = size%(times*filmLength),time=[];
+        (function( film, options, selector ) { //46ms
+            var size = options["size"], filmLength = film.length,
+                times = floor( size / filmLength ), gap = size % ( times * filmLength ), time = [];
             var container = document.body.querySelector(selector);  //获取容器元素的DOM引用
 
-            if(container==null) {
+            if( container == null ) {
                 throw new Error("Element not found!");
             }
 
-            container.innerHTML = "<canvas width='"+size+"' height='"+size+"'></canvas>";
+            container.innerHTML = "<canvas width='" + size + "' height='"+size+"'></canvas>";
             var canvas = container.querySelector("canvas"),context=canvas.getContext("2d");
             var image = new Image();  //先将image写入到canvas，再获取canvas中的数据
             var foreR = parseInt(options["foreColor"].slice(1,3),16),
@@ -352,63 +357,79 @@ var QRcode;
                 backG = parseInt(options["backColor"].slice(3,5),16),
                 backB = parseInt(options["backColor"].slice(5,7),16);
             image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY/j//z8ABf4C/qc1gYQAAAAASUVORK5CYII=";
-            context.drawImage(image,0,0,size,size);
-            var imageData = context.getImageData(0,0,size,size),data=imageData.data,i,row=0,col=0,value,left,right,len;
-            for(i=0;i<filmLength;i++) {  time[i]=times; }
-            var mid=(filmLength-1)>>1;
+            context.drawImage( image, 0, 0, size, size );
+            var imageData = context.getImageData( 0, 0, size, size ),
+                data = imageData.data, i, row = 0, col = 0, value, left, right, len;
+            for( i = 0; i < filmLength; i++ ) {
+                time[i] = times;
+            }
+            var mid = ( filmLength - 1 ) >> 1;
 
-            if(gap>=(mid+1)){     //调整像素单元的长宽比例适应容器
-                for(i=0;i<filmLength;i+=2){ time[i]++; }
-                if(gap-mid-1>0){
-                    left=mid-(((gap-mid-1)>>1)<<1)-1;right=mid+(((gap-mid)>>1)<<1)-3;
-                    for(i=left;i<=right;i+=2){ time[i]++; }
+            if( gap >= ( mid + 1 ) ) {     //调整像素单元的长宽比例适应容器
+                for( i = 0; i < filmLength; i += 2 ) {
+                    time[i]++;
+                }
+                if( gap - mid - 1 > 0 ) {
+                    left = mid - ( ( ( gap - mid - 1 ) >> 1 ) <<1 )-1;
+                    right = mid + ( ( ( gap - mid ) >> 1 ) << 1 ) - 3;
+                    for( i = left; i <= right; i += 2 ) {
+                        time[i]++;
+                    }
                 }
             } else {
-                if(gap>0){
-                    left=mid-((gap>>1)<<1);right=mid+(((gap+1)>>1)<<1)-2;
-                    for(i=left;i<=right;i+=2){ time[i]++; }
+                if( gap > 0) {
+                    left = mid - ( ( gap >> 1 ) << 1 );
+                    right = mid + ( ( ( gap + 1 ) >> 1 ) << 1 ) - 2;
+                    for( i = left; i <= right; i += 2 ) {
+                        time[i]++;
+                    }
                 }
             }
 
-            var sumY=time[0],sumX=time[0],axisX=0;try{
-            for(i=0,len=data.length;i<len;i+=4){
-                if(film[axisX][col]==false){
-                    data[i]=foreR;data[i+1]=foreG;data[i+2]=foreB;
+            var sumY = time[0], sumX = time[0], axisX = 0; try {
+            for( i = 0, len = data.length; i < len; i += 4 ) {
+                if( film[axisX][col] == false ) {
+                    data[i] = foreR; data[i + 1] = foreG; data[i + 2] = foreB;
+                } else {
+                    data[i] = backR; data[i + 1] = backG; data[i + 2] = backB;
                 }
-                else {
-                    data[i]=backR;data[i+1]=backG;data[i+2]=backB;
+                value = ( i >> 2 ) % size;
+                if( ( col == filmLength - 1 ) && ( value == size - 1) ) {
+                    col = 0; row++; sumY = time[0]; value = 0;
                 }
-                value=(i>>2)%size;
-                if((col==filmLength-1)&&(value==size-1)) { col=0; row++; sumY=time[0]; value=0;}
-                if((value+1)%sumY==0){ col++; sumY+=time[col];}
-                if((row+1)%sumX==0) { axisX++;sumX+=time[axisX]; }
-            }}catch(ex){}
-            imageData.data=data;
-            context.putImageData(imageData,0,0);
-        })(this.filmArray,this.options,selector);
+                if( ( value + 1 ) % sumY == 0) {
+                    col++; sumY += time[col];
+                }
+                if( ( row + 1) % sumX == 0) {
+                    axisX++; sumX += time[axisX];
+                }
+            }} catch(ex) {}
+            imageData.data = data;
+            context.putImageData( imageData, 0, 0 );
+        })( this.filmArray, this.options, selector );
     };
 
     QRcode.prototype={
         constructor: QRcode,
 
         getOptions: function(){   //取得二维码选项的信息
-            var str="";
+            var str = "";
             for(var name in this.options){
-                str+=name+":  "+this.options[name]+"\n";
+                str += name + ":  " + this.options[name] + "\n";
             }
             return str;
         },
 
-        resetOptions: function(){
-            for(var key in defaultOpt){
-                this.options[key]=defaultOpt[key];
+        resetOptions: function() {
+            for( var key in defaultOpt ){
+                this.options[key] = defaultOpt[key];
             }
         },
 
         showDataStream: function(){
-            for(var i= 0,len=this.dataStream.length;i<len;i++){
+            for( var i = 0,len = this.dataStream.length; i < len; i++ ) {
                 document.write((this.dataStream[i]==true?1:0)+"  ");
-                if(i>0&&(i+1)%8==0) { document.write("<br>") }
+                if( i > 0 && ( i + 1 ) % 8 == 0 ) { document.write("<br>") }
             }
         }
     };
