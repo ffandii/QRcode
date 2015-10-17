@@ -173,13 +173,14 @@ var QRcode;
         })(this.dataStream,this.finalStream,this.version,this.options["level"]);
 
         //胶片制作
-        this.filmArray=[];
-        (function(film,final,version){
+        this.filmArray=[];this.map=[]; //map为参照物
+        (function(film,map,final,version){
             var length=21+version*4,i, j,pixel=false,len,limit=length-7,n,p,m;  //胶片的实际尺寸
             for(i=0;i<length;i++){        //胶片初始化
-                film[i]=[];
+                film[i]=[];map[i]=[];
                 for(j=0;j<length;j++){
                     film[i][j]=true;      //true代表白色的模块
+                    map[i][j]=255;
                 }
             }
             for(i=0;i<7;i++){             //生成位置探测图形
@@ -192,6 +193,7 @@ var QRcode;
 
             for(j=6;j<=limit;j++){     //生成定位图形
                 if(pixel==false) { film[j][6]=film[6][j]=false; } pixel=!pixel;
+                if(j>=8&&j<=limit-2){ map[j][6]=map[6][j]=0; }
             }
 
             var axis=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],
@@ -202,11 +204,27 @@ var QRcode;
                     n=axis[version][i];p=axis[version][j];
                     if(!((n==6||n==limit)&&(p==6||p==limit))||(n==limit&&p==limit)){
                         film[n][p]=false;
-                        for(m=0;m<5;m++) { film[n-2+m][p-2]=film[n-2+m][p+2]=film[n-2][p-2+m]=film[n+2][p-2+m]=false; }
+                        for(m=0;m<5;m++){
+                            film[n-2+m][p-2]=film[n-2+m][p+2]=film[n-2][p-2+m]=film[n+2][p-2+m]=false;
+                            map[n-2+m][p-2]=map[n-2+m][p-1]=map[n-2+m][p]=map[n-2+m][p+1]=map[n-2+m][p+2]=0;
+                        }
                     }
                 }
             }
-        })(this.filmArray,this.finalStream,this.version);
+
+            for(i=0;i<=7;i++){
+                for(j=0;j<=7;j++){ map[i][j]=map[length-8+i][j]=map[i][length-8+j]=0; }
+                map[8][length-8+i]=map[length-8+i][8]=0;
+            }
+            for(i=0;i<=8;i++){ map[i][8]=map[8][i]=0; }
+            if(version>=6){
+                for(i=0;i<6;i++){
+                    for(j=0;j<3;j++){ map[length-11+j][i]=map[i][length-11+j]=0; }
+                }
+            }
+
+            
+        })(this.filmArray,this.map,this.finalStream,this.version);
 
         //胶片放映
         (function(film,options,selector){
@@ -237,13 +255,14 @@ var QRcode;
                 }
             }
             var sumY=time[0],sumX=time[0],axisX=0;try{
-            for(i=0,len=data.length;i<len;i+=4){
+            for(i=0,len=data.length;i<len;i+=4){/*
                 if(film[axisX][col]==false){
                     data[i]=foreR;data[i+1]=foreG;data[i+2]=foreB;
                 }
                 else {
                     data[i]=backR;data[i+1]=backG;data[i+2]=backB;
-                }
+                }*/
+                data[i]=data[i+1]=data[i+2]=film[axisX][col];
                 value=(i>>2)%size;
                 if((col==filmLength-1)&&(value==size-1)) { col=0; row++; sumY=time[0]; value=0;}
                 if((value+1)%sumY==0){ col++; sumY+=time[col];}
@@ -251,7 +270,7 @@ var QRcode;
             }}catch(ex){}
             imageData.data=data;
             context.putImageData(imageData,0,0);
-        })(this.filmArray,this.options,selector);
+        })(this.map,this.options,selector);
     };
 
     QRcode.prototype={
