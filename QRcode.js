@@ -222,7 +222,6 @@ var QRcode;
                     for(j=0;j<3;j++){ map[length-11+j][i]=map[i][length-11+j]=0; }
                 }
             }
-
             
         })(this.filmArray,this.map,this.finalStream,this.version);
 
