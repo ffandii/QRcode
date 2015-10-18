@@ -22,9 +22,10 @@ var QRcode;
         parseInt = window.parseInt;
 
     QRcode = function( opt, selector ){
+
         this.version = 0; //默认版本为0,0-39
-        //options为QRcode对象的实例属性
-        this.options = {};
+        this.options = {}; //options为QRcode对象的实例属性
+
         (function( set, options, opt ){
             var expColor = /^([#])+([a-zA-Z0-9]{6})+$/g; //验证颜色
             for(var key in set){
@@ -45,8 +46,7 @@ var QRcode;
                             options["backColor"] = expColor.test(value) == true ? value : set["backColor"];
                             break;
                     }
-                }
-                else {
+                } else {
                     options[key] = set[key];
                 }
             }
@@ -57,9 +57,8 @@ var QRcode;
 
         })( defaultOpt, this.options, opt );
 
-        //将输入字符串转化为0/1编码的数据流
-        this.dataStream = [];  //0-1数据流
-        (function( data, text, level, that){  //10ms
+        this.dataStream = [];  //将输入字符串转化为0/1编码的数据流
+        (function( data, text, level, that){
 
             var capacity = [[152,128,104,72],[272,224,176,128],[440,352,272,208],[640,512,384,288],[864,688,496,368],[1088,864,608,480],[1248,992,704,528],[1552,1232,880,688],[1856,1456,1056,800],[2192,1728,1232,976],
                 [2592,2032,1440,1120],[2960,2320,1648,1264],[3424,2672,1952,1440],[3688,2920,2088,1576],[4184,3320,2360,1784],[4712,3624,2600,2024],[5176,4056,2936,2264],[5768,4504,3176,2504],[6360,5016,3560,2728],[6888,5352,3880,3080],
@@ -73,13 +72,13 @@ var QRcode;
             }
 
             for( i = 0; i < 40; i++ ) {                          //此时版本i刚好能装下输入的数据
-                if( capacity[i][level] <= ( i<=8 ? lt1 : lt2 ) ) {
+                if( capacity[i][level] <= ( i <= 8 ? lt1 : lt2 ) ) {
                 } else{
                     version = i; mode = version > 8 ? 16 : 8; break;
                 }
             }
 
-            for( i = 0; i< length; i++ ) {
+            for( i = 0; i < length; i++ ) {
                 var value = text.charCodeAt(i);
                 if( value > 127 ) {
                     throw new Error("Input charset limit: ASCII");
@@ -97,7 +96,8 @@ var QRcode;
 
             data.unshift(0); data.unshift(0); data.unshift(1); data.unshift(0); //插入8位字节模式指示符
             data.push(0); data.push(0); data.push(0); data.push(0);
-            for( i = 0,j = ( capacity[version][level] - data.length ) >> 3; i < j; i++ ){
+            
+            for( i = 0,j = ( capacity[version][level] - data.length ) >> 3; i < j; i++ ){ //剩余部分填补如下数据
                 if( i % 2 == 0) {
                     data.push(1); data.push(1); data.push(1); data.push(0);
                     data.push(1); data.push(1); data.push(0); data.push(0);
@@ -111,8 +111,8 @@ var QRcode;
 
         })( this.dataStream, this.options["text"], this.options["level"], this );
 
-        //纠错编码，组合数据码和纠错码
-        this.finalStream = [];
+        this.finalStream = []; //纠错编码，组合数据码和纠错码
+
         (function( data, final, version, level){
 
             var bits = [0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0]; //码字填充后的剩余位
@@ -141,7 +141,7 @@ var QRcode;
                 132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,
                 117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175];
 
-            var errorStream = [],info = errorInfo[level][version],
+            var errorStream = [], info = errorInfo[level][version],
                 at, w = 0, i, j, len, num, b = [], t = [], m, n, c, value, zone, real;  //纠错码字的0/1数据流
 
             var dataNum = [ info[2], info[3] == undefined ? 0 : ( 1 + info[2] ) ],
@@ -194,7 +194,7 @@ var QRcode;
                         }
                     }
 
-                    for( n = correct-1; n >= 0; n-- ) {
+                    for( n = correct - 1; n >= 0; n-- ) {
                         for( c = 0;c < 8; c++ ) {
                             errorStream.push(b[n][c]);
                         }
@@ -239,7 +239,7 @@ var QRcode;
                 }
             }
 
-            for( j = 0; j < correct; j++ ) {
+            for( j = 0; j < correct; j++ ) {   //组合数据码字和纠错码字
                 for( i = 0; i < real; i++ ) {
                     for( n = 0; n < 8; n++ ) {
                         final.push(eArr[i][ ( j << 3) + n ]);
@@ -247,15 +247,19 @@ var QRcode;
                 }
             }
 
-            for( i = 0, len = bits[version]; i < len; i++ ) {
+            for( i = 0, len = bits[version]; i < len; i++ ) {   //剩余位
                 final.push(0);
             }
+
         })( this.dataStream, this.finalStream, this.version, this.options["level"] );
 
         //胶片制作
         this.filmArray = []; this.map = []; //map为参看图形
+
         (function( film, map, final, version ) {
+
             var length = 21 + version * 4, i, j, pixel = false, len, limit = length - 7, n, p, m;  //胶片的实际尺寸
+
             for( i = 0; i < length; i++ ) {        //胶片初始化
                 film[i] = []; map[i] = [];
                 for( j = 0; j < length; j++ ) {
@@ -318,6 +322,7 @@ var QRcode;
             }
 
             i = j = length - 1; n = 0; m = false;//初始化写入位置，0↑ 1↓
+
             while( final.length > 0 ) {  //数据写入到filmArray中
                 if( i == -1 ) {
                     i = 0; j = j == 8 ? 5 : j - 2; n = 1;
@@ -338,9 +343,11 @@ var QRcode;
         })( this.filmArray, this.map, this.finalStream, this.version );
 
         //胶片放映
-        (function( film, options, selector ) { //46ms
+        (function( film, options, selector ) {
+
             var size = options["size"], filmLength = film.length,
                 times = floor( size / filmLength ), gap = size % ( times * filmLength ), time = [];
+
             var container = document.body.querySelector(selector);  //获取容器元素的DOM引用
 
             if( container == null ) {
@@ -348,24 +355,32 @@ var QRcode;
             }
 
             container.innerHTML = "<canvas width='" + size + "' height='"+size+"'></canvas>";
+
             var canvas = container.querySelector("canvas"),context=canvas.getContext("2d");
+
             var image = new Image();  //先将image写入到canvas，再获取canvas中的数据
+
             var foreR = parseInt(options["foreColor"].slice(1,3),16),
                 foreG = parseInt(options["foreColor"].slice(3,5),16),
                 foreB = parseInt(options["foreColor"].slice(5,7),16),
                 backR = parseInt(options["backColor"].slice(1,3),16),
                 backG = parseInt(options["backColor"].slice(3,5),16),
                 backB = parseInt(options["backColor"].slice(5,7),16);
+
             image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY/j//z8ABf4C/qc1gYQAAAAASUVORK5CYII=";
+
             context.drawImage( image, 0, 0, size, size );
+
             var imageData = context.getImageData( 0, 0, size, size ),
                 data = imageData.data, i, row = 0, col = 0, value, left, right, len;
-            for( i = 0; i < filmLength; i++ ) {
+
+            for( i = 0; i < filmLength; i++ ) {    //调整像素单元的长宽比例适应容器
                 time[i] = times;
             }
+
             var mid = ( filmLength - 1 ) >> 1;
 
-            if( gap >= ( mid + 1 ) ) {     //调整像素单元的长宽比例适应容器
+            if( gap >= ( mid + 1 ) ) {
                 for( i = 0; i < filmLength; i += 2 ) {
                     time[i]++;
                 }
@@ -387,6 +402,7 @@ var QRcode;
             }
 
             var sumY = time[0], sumX = time[0], axisX = 0; try {
+
             for( i = 0, len = data.length; i < len; i += 4 ) {
                 if( film[axisX][col] == false ) {
                     data[i] = foreR; data[i + 1] = foreG; data[i + 2] = foreB;
@@ -428,8 +444,10 @@ var QRcode;
 
         showDataStream: function(){
             for( var i = 0,len = this.dataStream.length; i < len; i++ ) {
-                document.write((this.dataStream[i]==true?1:0)+"  ");
-                if( i > 0 && ( i + 1 ) % 8 == 0 ) { document.write("<br>") }
+                document.write( ( this.dataStream[i] == true ? 1 : 0 ) + "  " );
+                if( i > 0 && ( i + 1 ) % 8 == 0 ) {
+                    document.write("<br>")
+                }
             }
         }
     };
