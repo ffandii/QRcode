@@ -65,7 +65,7 @@ var QRcode;
                 [7456,5712,4096,3248],[8048,6256,4544,3536],[8752,6880,4912,3712],[9392,7312,5312,4112],[10208,8000,5744,4304],[10960,8496,6032,4768],[11744,9024,6464,5024],[12248,9544,6968,5288],[13048,10136,7288,5608],[13880,10984,7880,5960],
                 [14744,11640,8264,6344],[15640,12328,8920,6760],[16568,13048,9368,7208],[17528,13800,9848,7688],[18448,14496,10288,7888],[19472,15312,10832,8432],[20528,15936,11408,8768],[21616,16816,12016,9136],[22496,17728,12656,9776],[23648,18672,13328,10208]];
 
-            var length = text.length, lt1 = 12+(length<<3),  lt2=lt1+8, i , j , mode , version;
+            var length = text.length, lt1 = 12 + ( length << 3 ),  lt2 = lt1 + 8, i , j , mode , version;
 
             if( lt2 > capacity[39][level] ) {
                 throw new Error("Input text is too long!");
@@ -96,7 +96,7 @@ var QRcode;
 
             data.unshift(0); data.unshift(0); data.unshift(1); data.unshift(0); //插入8位字节模式指示符
             data.push(0); data.push(0); data.push(0); data.push(0);
-            
+
             for( i = 0,j = ( capacity[version][level] - data.length ) >> 3; i < j; i++ ){ //剩余部分填补如下数据
                 if( i % 2 == 0) {
                     data.push(1); data.push(1); data.push(1); data.push(0);
