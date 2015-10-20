@@ -253,10 +253,11 @@ var QRcode;
 
         })( this.dataStream, this.finalStream, this.version, this.options["level"] );
 
-        //胶片制作
-        this.filmArray = []; this.map = []; //map为参看图形
+        this.filmArray = [];  //胶片制作
 
-        (function( film, map, final, version ) {
+        (function( film, final, version ) {
+
+            var map = []; //map为参看图形
 
             var length = 21 + version * 4, i, j, pixel = false, len, limit = length - 7, n, p, m;  //胶片的实际尺寸
 
@@ -340,7 +341,15 @@ var QRcode;
                 m = ! m;
             }
 
-        })( this.filmArray, this.map, this.finalStream, this.version );
+            for( i = 0; i < length; i++ ) {  //添加掩膜，综合考虑，选择掩膜011
+                for (j = 0; j < length; j++) {
+                    if (map[i][j] != 0) {
+                        film[i][j] = (i + j) % 3 == 0 ? !film[i][j] : film[i][j];
+                    }
+                }
+            }
+
+        })( this.filmArray, this.finalStream, this.version );
 
         //胶片放映
         (function( film, options, selector ) {
