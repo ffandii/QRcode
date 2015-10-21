@@ -255,7 +255,7 @@ var QRcode;
 
         this.filmArray = [];  //胶片制作
 
-        (function( film, final, version ) {
+        (function( film, final, version, level, floor ) {
 
             var map = []; //map为参看图形
 
@@ -331,7 +331,7 @@ var QRcode;
                     i = length - 1; j -= 2; n = 0;
                 }
                 if( map[i][j] != 0) {
-                    film[i][j] = ! final.shift();
+                    film[i][j] = (i + j) % 3 == 0 ? final.shift() : ! final.shift();  //添加掩膜，综合考虑，选择掩膜011
                 }
                 if( n==0 ) {
                     i = m == false ? i : i - 1; j = m == false ? j - 1 : j + 1;
@@ -341,15 +341,46 @@ var QRcode;
                 m = ! m;
             }
 
-            for( i = 0; i < length; i++ ) {  //添加掩膜，综合考虑，选择掩膜011
-                for (j = 0; j < length; j++) {
-                    if (map[i][j] != 0) {
-                        film[i][j] = (i + j) % 3 == 0 ? !film[i][j] : film[i][j];
-                    }
+            var format = [[0,1],[0,0],[1,1],[1,0]]; //格式信息
+
+            n = ( format[level][0] << 4 ) + ( format[level][1] << 3 ) + 2 + 1; p = 0;
+
+            n <<= 5;
+            for( i = 0; i < 5; i++ ) {
+                p <<= 1; n <<= 1;
+                if ((( p ^ n ) & 0x400) != 0){
+                    p ^= 0x137;
                 }
             }
 
-        })( this.filmArray, this.finalStream, this.version );
+            n = ( (n & 0x7c00) | (p & 0x3ff) ) ^ 21522;
+
+            for( i = 0; i < 6; i++ ) {  //写入格式信息
+                film[i][8] = film[8][length-1-i] = ! ( n % 2 );
+                n >>= 1;
+            }
+            film[7][8] = film[8][length - 7] = ! ( n % 2 ); n >>= 1;
+            film[8][8] = film[8][length - 8] = ! ( n % 2 ); n >>= 1;
+            film[8][7] = film[length - 7][8] = ! ( n % 2 ); n >>= 1;
+            film[length - 8][8] = 0;    //一个默认的深色模块
+            for( i = 0; i < 6; i++ ) {
+                film[8][5 - i] = film[length - 6 + i][8] = ! ( n % 2 );
+                n >>= 1;
+            }
+
+            if( version >= 6 ) {
+                var verIno = [0x7C94, 0x85BC, 0x9A99, 0xA4D3, 0xBBF6, 0xC762, 0xD847, 0xE60D, 0xF928, 0x10B78, 0x1145D, 0x12A17, 0x13532,
+                    0x149A6, 0x15683, 0x168C9, 0x177EC, 0x18EC4, 0x191E1, 0x1AFAB, 0x1B08E, 0x1CC1A, 0x1D33F, 0x1ED75, 0x1F250, 0x209D5,
+                    0x216F0, 0x228BA, 0x2379F, 0x24B0B, 0x2542E, 0x26A64, 0x27541, 0x28C69];    //版本信息
+
+                n = verIno[version - 6];    //写入版本信息
+                for( i = 0; i < 18; i++ ){
+                    film[length - 11 + i % 3][floor(i / 3)]=film[floor(i / 3)][length - 11 + i % 3] =! ( n % 2 );
+                    n >>= 1;
+                }
+            }
+
+        })( this.filmArray, this.finalStream, this.version, this.options["level"], floor );
 
         //胶片放映
         (function( film, options, selector ) {
