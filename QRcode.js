@@ -20,7 +20,7 @@ var QRcode;
         isNaN = window.isNaN,
         document = window.document,
         parseInt = window.parseInt,
-        fromCharCode= String.fromCharCode;
+        fromCharCode = String.fromCharCode;
 
     QRcode = function( opt, selector ){
 
@@ -75,13 +75,13 @@ var QRcode;
             if( options["text"] == "" ){
                 throw new Error("Input text can't be null!");
             } else {
-                options["text"]=utf16to8(options["text"]);
+                options["text"]=utf16to8( options["text"] );
             }
 
         })( defaultOpt, this.options, opt );
 
         this.dataStream = [];  //将输入字符串转化为0/1编码的数据流
-        (function( data, text, level, that){
+        (function( data, text, level, that ) {
 
             var capacity = [[152,128,104,72],[272,224,176,128],[440,352,272,208],[640,512,384,288],[864,688,496,368],[1088,864,608,480],[1248,992,704,528],[1552,1232,880,688],[1856,1456,1056,800],[2192,1728,1232,976],
                 [2592,2032,1440,1120],[2960,2320,1648,1264],[3424,2672,1952,1440],[3688,2920,2088,1576],[4184,3320,2360,1784],[4712,3624,2600,2024],[5176,4056,2936,2264],[5768,4504,3176,2504],[6360,5016,3560,2728],[6888,5352,3880,3080],
@@ -374,7 +374,7 @@ var QRcode;
             n <<= 5;
             for( i = 0; i < 5; i++ ) {
                 p <<= 1; n <<= 1;
-                if ((( p ^ n ) & 0x400) != 0){
+                if ((( p ^ n ) & 0x400) != 0) {
                     p ^= 0x137;
                 }
             }
@@ -457,29 +457,31 @@ var QRcode;
                     data[i + 2] = backB;
                 }
             }
+
             imageData.data = data;
             context.putImageData( imageData, 0, 0 );
+
         })( this.filmArray, this.options, selector, floor );
     };
 
-    QRcode.prototype={
+    QRcode.prototype = {
         constructor: QRcode,
 
-        getOptions: function(){   //取得二维码选项的信息
+        getOptions: function() {   //取得二维码选项的信息
             var str = "";
-            for(var name in this.options){
+            for(var name in this.options) {
                 str += name + ":  " + this.options[name] + "\n";
             }
             return str;
         },
 
         resetOptions: function() {
-            for( var key in defaultOpt ){
+            for( var key in defaultOpt ) {
                 this.options[key] = defaultOpt[key];
             }
         },
 
-        showDataStream: function(){
+        showDataStream: function() {
             for( var i = 0,len = this.dataStream.length; i < len; i++ ) {
                 document.write( ( this.dataStream[i] == true ? 1 : 0 ) + "  " );
                 if( i > 0 && ( i + 1 ) % 8 == 0 ) {
