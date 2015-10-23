@@ -19,7 +19,8 @@ var QRcode;
         Number = window.Number,
         isNaN = window.isNaN,
         document = window.document,
-        parseInt = window.parseInt;
+        parseInt = window.parseInt,
+        fromCharCode= String.fromCharCode;
 
     QRcode = function( opt, selector ){
 
@@ -51,8 +52,30 @@ var QRcode;
                 }
             }
 
+            function utf16to8( str ) {  //可能遇到中文，utf16转utf8
+                var out, i, len, c;
+                out = "";
+                len = str.length;
+                for(i = 0; i < len; i++) {
+                    c = str.charCodeAt(i);
+                    if ((c >= 0x0001) && (c <= 0x007F)) {
+                        out += str.charAt(i);
+                    } else if (c > 0x07FF) {
+                        out += fromCharCode(0xE0 | ((c >> 12) & 0x0F));
+                        out += fromCharCode(0x80 | ((c >>  6) & 0x3F));
+                        out += fromCharCode(0x80 | ((c >>  0) & 0x3F));
+                    } else {
+                        out += fromCharCode(0xC0 | ((c >>  6) & 0x1F));
+                        out += fromCharCode(0x80 | ((c >>  0) & 0x3F));
+                    }
+                }
+                return out;
+            }
+
             if( options["text"] == "" ){
                 throw new Error("Input text can't be null!");
+            } else {
+                options["text"]=utf16to8(options["text"]);
             }
 
         })( defaultOpt, this.options, opt );
@@ -80,9 +103,6 @@ var QRcode;
 
             for( i = 0; i < length; i++ ) {
                 var value = text.charCodeAt(i);
-                if( value > 127 ) {
-                    throw new Error("Input charset limit: ASCII");
-                }
                 var bit = 0x80;
                 for( j = 0; j < 8; j++ ) {
                     data.push( !! ( bit & value ) ); bit >>= 1;
@@ -154,7 +174,13 @@ var QRcode;
                 }
             }
 
-            for( i = 0, num = dataNum[i]; i < 2 && num != 0; i++ ) {   //第一块以及可能的第二块
+            for( i = 0; i < 2; i++ ) {   //第一块以及可能的第二块
+
+                num = dataNum[i];
+                if( num == 0 ) {
+                    break;
+                }
+
                 for( j = 0, len = piece[i]; j < len;j++ ) {   //每一块的分数
 
                     for( m = 0; m < correct; m++ ) {
@@ -383,10 +409,9 @@ var QRcode;
         })( this.filmArray, this.finalStream, this.version, this.options["level"], floor );
 
         //胶片放映
-        (function( film, options, selector ) {
+        (function( film, options, selector, floor ) {
 
-            var size = options["size"], filmLength = film.length,
-                times = floor( size / filmLength ), gap = size % ( times * filmLength ), time = [];
+            var size = options["size"], filmLength = film.length;
 
             var container = document.body.querySelector(selector);  //获取容器元素的DOM引用
 
@@ -396,7 +421,7 @@ var QRcode;
 
             container.innerHTML = "<canvas width='" + size + "' height='"+size+"'></canvas>";
 
-            var canvas = container.querySelector("canvas"),context=canvas.getContext("2d");
+            var canvas = container.querySelector("canvas"), context = canvas.getContext("2d");
 
             var image = new Image();  //先将image写入到canvas，再获取canvas中的数据
 
@@ -412,57 +437,29 @@ var QRcode;
             context.drawImage( image, 0, 0, size, size );
 
             var imageData = context.getImageData( 0, 0, size, size ),
-                data = imageData.data, i, row = 0, col = 0, value, left, right, len;
-
-            for( i = 0; i < filmLength; i++ ) {    //调整像素单元的长宽比例适应容器
-                time[i] = times;
-            }
-
-            var mid = ( filmLength - 1 ) >> 1;
-
-            if( gap >= ( mid + 1 ) ) {
-                for( i = 0; i < filmLength; i += 2 ) {
-                    time[i]++;
-                }
-                if( gap - mid - 1 > 0 ) {
-                    left = mid - ( ( ( gap - mid - 1 ) >> 1 ) <<1 )-1;
-                    right = mid + ( ( ( gap - mid ) >> 1 ) << 1 ) - 3;
-                    for( i = left; i <= right; i += 2 ) {
-                        time[i]++;
-                    }
-                }
-            } else {
-                if( gap > 0) {
-                    left = mid - ( ( gap >> 1 ) << 1 );
-                    right = mid + ( ( ( gap + 1 ) >> 1 ) << 1 ) - 2;
-                    for( i = left; i <= right; i += 2 ) {
-                        time[i]++;
-                    }
-                }
-            }
-
-            var sumY = time[0], sumX = time[0], axisX = 0; try {
+                data = imageData.data, i, row = -1, col = 0, len, rate = filmLength / size;
 
             for( i = 0, len = data.length; i < len; i += 4 ) {
-                if( film[axisX][col] == false ) {
-                    data[i] = foreR; data[i + 1] = foreG; data[i + 2] = foreB;
+
+                col = ( i >> 2 ) % size;
+
+                if(col % size == 0 ) {
+                    row++;
+                }
+
+                if( film[ floor( row * rate ) ][ floor ( col * rate ) ] == false ) {
+                    data[i] = foreR;
+                    data[i + 1] = foreG;
+                    data[i + 2] = foreB;
                 } else {
-                    data[i] = backR; data[i + 1] = backG; data[i + 2] = backB;
+                    data[i] = backR;
+                    data[i + 1] = backG;
+                    data[i + 2] = backB;
                 }
-                value = ( i >> 2 ) % size;
-                if( ( col == filmLength - 1 ) && ( value == size - 1) ) {
-                    col = 0; row++; sumY = time[0]; value = 0;
-                }
-                if( ( value + 1 ) % sumY == 0) {
-                    col++; sumY += time[col];
-                }
-                if( ( row + 1) % sumX == 0) {
-                    axisX++; sumX += time[axisX];
-                }
-            }} catch(ex) {}
+            }
             imageData.data = data;
             context.putImageData( imageData, 0, 0 );
-        })( this.filmArray, this.options, selector );
+        })( this.filmArray, this.options, selector, floor );
     };
 
     QRcode.prototype={

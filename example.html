@@ -6,23 +6,24 @@
     <script src="QRcode.js"></script>
     <style>
         canvas{
+            border: 0px solid #ccc;
         }
     </style>
 </head>
 <body>
 <div id="myDiv"></div>
 <script type="text/javascript">
-//    var startTime=new Date().getTime();
+    var startTime=new Date().getTime();
       var qrcode=new QRcode({
-        text: "http://ffandii.github.io/Personal-blog/",
-        level: "l",     //L:0 M:1 Q:2 H:3
-        size: 256,
+        text: "对英国进行国事访问的第二天，习大大和彭麻麻在英国王室的金童玉女威廉王子和凯特王妃夫妇的陪同下，参加中英创意产业交流活动。据每日邮报报道，21日，在兰卡斯特宫举行的中英创意产业交流活动中，威廉王子夫妇不仅接待了习大大和彭麻麻，还接待了另一位特殊的贵宾——功夫巨星成龙。",
+        level: "q",     //L:0 M:1 Q:2 H:3
+        size: 278,
         foreColor: "#000000",   //前景色默认为黑色
         backColor: "#ffffff"   //背景色默认为白色
     },"#myDiv");
 //    qrcode.showDataStream();
 //    qrcode.showOptions();
-//    console.log(new Date().getTime()-startTime);
+    console.log(new Date().getTime()-startTime);
 </script>
 </body>
 </html>
