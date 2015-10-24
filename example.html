@@ -10,22 +10,17 @@
 <body>
 <div id="myDiv"></div>
 <script type="text/javascript">
+//  var startTime=new Date().getTime();
 
-//    var startTime=new Date().getTime();
-
-    var qrcode=new QRcode();
-
-    qrcode.generate({
+    QRcode.generate({
         text: "你好，世界.这是我制作的第一个javascript插件。",
         level: "h",     //L:0 M:1 Q:2 H:3
         size: 380,
         foreColor: "#2c8b29",   //前景色默认为黑色
         backColor: "#efefef"   //背景色默认为白色
-    },"#myDiv");
+    },"#myDiv").embedLogo("logo.png");
 
-    qrcode.embedLogo("logo.png");
-
-//    console.log(new Date().getTime()-startTime);
+//  console.log(new Date().getTime()-startTime);
 
 </script>
 </body>
