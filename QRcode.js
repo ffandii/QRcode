@@ -2,35 +2,93 @@
  * QRcode javascript plugin
  * Created by ffandii on 2015-10-02.
  */
+
 var QRcode;
+
 (function( window ){
 
     //默认参数设置
     var defaultOpt = {
         text: "",
-        level: 0,     //L:0 M:1 Q:2 H:3
+        level: 0,               //L:0 M:1 Q:2 H:3
         size: 278,
         foreColor: "#000000",   //前景色默认为黑色
-        backColor: "#FFFFFF"   //背景色默认为白色
+        backColor: "#FFFFFF"    //背景色默认为白色
     };
 
-    //可能用到的全局函数
-    var floor = window.Math.floor,
+    var floor = window.Math.floor,  //可能用到的全局函数
         Number = window.Number,
         isNaN = window.isNaN,
         document = window.document,
         parseInt = window.parseInt,
         fromCharCode = String.fromCharCode;
 
-    QRcode = function( opt, selector ){
+    QRcode = function(){
 
-        this.version = 0; //默认版本为0,0-39
-        this.options = {}; //options为QRcode对象的实例属性
+        this.version = 0;       //默认版本为0,0-39
 
-        (function( set, options, opt ){
+        this.options = {};      //options为QRcode对象的实例属性
+
+        this.dataStream = [];   //将输入字符串转化为0/1编码的数据流
+
+        this.finalStream = [];  //纠错编码，组合数据码和纠错码
+
+        this.filmArray = [];    //胶片
+
+        this.qrExist = false;   //二维码图像区域存在的一个标志
+
+        this.canvas;            //canvas句柄,定义在initCanvas中
+
+    };
+
+    QRcode.prototype = {
+
+        constructor: QRcode,
+
+        generate: function( opt, selector ) {
+
+            this.optSet( defaultOpt, this.options, opt );  //参数设置
+
+            this.initCanvas( selector );  //初始化1次
+
+            this.createData();     //生成数据码字
+
+            this.createFinal();
+
+            this.createFilm( floor );
+
+            this.displayFilm( floor );  //显示film
+
+        },
+
+        utf16To8: function( str ) {  //可能遇到各国语言等非ASCII字符，utf16转utf8
+            var out, i, len, c;
+            out = "";
+            len = str.length;
+            for(i = 0; i < len; i++) {
+                c = str.charCodeAt(i);
+                if ((c >= 0x0001) && (c <= 0x007F)) {
+                    out += str.charAt(i);
+                } else if (c > 0x07FF) {
+                    out += fromCharCode(0xE0 | ((c >> 12) & 0x0F));
+                    out += fromCharCode(0x80 | ((c >>  6) & 0x3F));
+                    out += fromCharCode(0x80 | ((c >>  0) & 0x3F));
+                } else {
+                    out += fromCharCode(0xC0 | ((c >>  6) & 0x1F));
+                    out += fromCharCode(0x80 | ((c >>  0) & 0x3F));
+                }
+            }
+            return out;
+        },
+
+        optSet: function( set, options, opt ) {
+
             var expColor = /^([#])+([a-zA-Z0-9]{6})+$/g; //验证颜色
-            for(var key in set){
+
+            for(var key in set) {
+
                 var value = opt[key], type = typeof value;
+
                 if(type != "undefined" && type != "function" && type != "object" ){
                     switch( key ){
                         case "text" : options["text"] = value.toString();
@@ -52,36 +110,13 @@ var QRcode;
                 }
             }
 
-            function utf16to8( str ) {  //可能遇到中文，utf16转utf8
-                var out, i, len, c;
-                out = "";
-                len = str.length;
-                for(i = 0; i < len; i++) {
-                    c = str.charCodeAt(i);
-                    if ((c >= 0x0001) && (c <= 0x007F)) {
-                        out += str.charAt(i);
-                    } else if (c > 0x07FF) {
-                        out += fromCharCode(0xE0 | ((c >> 12) & 0x0F));
-                        out += fromCharCode(0x80 | ((c >>  6) & 0x3F));
-                        out += fromCharCode(0x80 | ((c >>  0) & 0x3F));
-                    } else {
-                        out += fromCharCode(0xC0 | ((c >>  6) & 0x1F));
-                        out += fromCharCode(0x80 | ((c >>  0) & 0x3F));
-                    }
-                }
-                return out;
-            }
+            options["text"]=this.utf16To8( options["text"] );
 
-            if( options["text"] == "" ){
-                throw new Error("Input text can't be null!");
-            } else {
-                options["text"]=utf16to8( options["text"] );
-            }
+        },
 
-        })( defaultOpt, this.options, opt );
+        createData: function() {
 
-        this.dataStream = [];  //将输入字符串转化为0/1编码的数据流
-        (function( data, text, level, that ) {
+            var data = this.dataStream, text = this.options["text"], level = this.options["level"];
 
             var capacity = [[152,128,104,72],[272,224,176,128],[440,352,272,208],[640,512,384,288],[864,688,496,368],[1088,864,608,480],[1248,992,704,528],[1552,1232,880,688],[1856,1456,1056,800],[2192,1728,1232,976],
                 [2592,2032,1440,1120],[2960,2320,1648,1264],[3424,2672,1952,1440],[3688,2920,2088,1576],[4184,3320,2360,1784],[4712,3624,2600,2024],[5176,4056,2936,2264],[5768,4504,3176,2504],[6360,5016,3560,2728],[6888,5352,3880,3080],
@@ -127,13 +162,12 @@ var QRcode;
                 }
             }
 
-            that.version = version;
+            this.version = version;
+        },
 
-        })( this.dataStream, this.options["text"], this.options["level"], this );
+        createFinal: function() {
 
-        this.finalStream = []; //纠错编码，组合数据码和纠错码
-
-        (function( data, final, version, level){
+            var data = this.dataStream, final = this.finalStream, version = this.version, level = this.options["level"];
 
             var bits = [0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0]; //码字填充后的剩余位
 
@@ -276,12 +310,11 @@ var QRcode;
             for( i = 0, len = bits[version]; i < len; i++ ) {   //剩余位
                 final.push(0);
             }
+        },
 
-        })( this.dataStream, this.finalStream, this.version, this.options["level"] );
+        createFilm: function( floor ) {
 
-        this.filmArray = [];  //胶片制作
-
-        (function( film, final, version, level, floor ) {
+            var film = this.filmArray, final = this.finalStream, version = this.version, level = this.options["level"];
 
             var map = []; //map为参看图形
 
@@ -405,13 +438,11 @@ var QRcode;
                     n >>= 1;
                 }
             }
+        },
 
-        })( this.filmArray, this.finalStream, this.version, this.options["level"], floor );
+        initCanvas: function( selector ) {
 
-        //胶片放映
-        (function( film, options, selector, floor ) {
-
-            var size = options["size"], filmLength = film.length;
+            var size = this.options["size"];
 
             var container = document.body.querySelector(selector);  //获取容器元素的DOM引用
 
@@ -421,9 +452,23 @@ var QRcode;
 
             container.innerHTML = "<canvas width='" + size + "' height='"+size+"'></canvas>";
 
-            var canvas = container.querySelector("canvas"), context = canvas.getContext("2d");
+            this.canvas = container.querySelector("canvas");
+
+            var context = this.canvas.getContext("2d");
 
             var image = new Image();  //先将image写入到canvas，再获取canvas中的数据
+
+
+            image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY/j//z8ABf4C/qc1gYQAAAAASUVORK5CYII=";
+
+            context.drawImage( image, 0, 0, size, size );
+        },
+
+        displayFilm: function( floor ) {
+
+            var options = this.options, context = this.canvas.getContext("2d");
+
+            var film = this.filmArray, filmLength = film.length, size = options["size"];
 
             var foreR = parseInt(options["foreColor"].slice(1,3),16),
                 foreG = parseInt(options["foreColor"].slice(3,5),16),
@@ -431,10 +476,6 @@ var QRcode;
                 backR = parseInt(options["backColor"].slice(1,3),16),
                 backG = parseInt(options["backColor"].slice(3,5),16),
                 backB = parseInt(options["backColor"].slice(5,7),16);
-
-            image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY/j//z8ABf4C/qc1gYQAAAAASUVORK5CYII=";
-
-            context.drawImage( image, 0, 0, size, size );
 
             var imageData = context.getImageData( 0, 0, size, size ),
                 data = imageData.data, i, row = -1, col = 0, len, rate = filmLength / size;
@@ -459,36 +500,30 @@ var QRcode;
             }
 
             imageData.data = data;
-            context.putImageData( imageData, 0, 0 );
+            context.putImageData( imageData, 0, 0 );  //将图像数据重新写回context中
 
-        })( this.filmArray, this.options, selector, floor );
-    };
+            this.qrExist = true;
 
-    QRcode.prototype = {
-        constructor: QRcode,
-
-        getOptions: function() {   //取得二维码选项的信息
-            var str = "";
-            for(var name in this.options) {
-                str += name + ":  " + this.options[name] + "\n";
-            }
-            return str;
         },
 
-        resetOptions: function() {
-            for( var key in defaultOpt ) {
-                this.options[key] = defaultOpt[key];
-            }
-        },
+        embedLogo: function( src ) {  //嵌入logo
 
-        showDataStream: function() {
-            for( var i = 0,len = this.dataStream.length; i < len; i++ ) {
-                document.write( ( this.dataStream[i] == true ? 1 : 0 ) + "  " );
-                if( i > 0 && ( i + 1 ) % 8 == 0 ) {
-                    document.write("<br>")
+            if( this.qrExist == true && typeof src == "string") {
+                var image = new Image();  //创建一个image对象，实现图像的预加载
+                image.src = src;
+
+                if(image.complete) {  //图片已经存在于浏览器缓存中
+
+                    return;
                 }
+
+                image.onload = function(){  //图片下载完毕时异步执行
+
+                }
+
             }
         }
+
     };
 
 })(window);
