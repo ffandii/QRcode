@@ -44,24 +44,6 @@
 
             constructor: QRcode,
 
-            generate: function( opt, selector ) {
-
-                this.optSet( defaultOpt, this.options, opt );  //参数设置
-
-                this.initCanvas( selector );  //初始化1次
-
-                this.createData();     //生成数据码字
-
-                this.createFinal();
-
-                this.createFilm( floor );
-
-                this.displayFilm( floor );  //显示film
-
-                return this;
-
-            },
-
             utf16To8: function( str ) {  //可能遇到各国语言等非ASCII字符，utf16转utf8
                 var out, i, len, c;
                 out = "";
@@ -504,6 +486,24 @@
                 context.putImageData( imageData, 0, 0 );  //将图像数据重新写回context中
 
                 this.qrExist = true;
+
+            },
+
+            generate: function( opt, selector ) {
+
+                this.optSet( defaultOpt, this.options, opt );  //参数设置
+
+                this.initCanvas( selector );  //初始化1次
+
+                this.createData();     //生成数据码字
+
+                this.createFinal();
+
+                this.createFilm( floor );
+
+                this.displayFilm( floor );  //显示film
+
+                return this;
 
             },
 
