@@ -508,17 +508,20 @@ var QRcode;
 
         embedLogo: function( src ) {  //嵌入logo
 
+            var size = this.options["size"], context = this.canvas.getContext("2d");
+            var x = size >> 2, y = ( size-x ) >> 1;
+
             if( this.qrExist == true && typeof src == "string") {
                 var image = new Image();  //创建一个image对象，实现图像的预加载
                 image.src = src;
 
                 if(image.complete) {  //图片已经存在于浏览器缓存中
-
+                    context.drawImage( image, y, y, x, x );
                     return;
                 }
 
                 image.onload = function(){  //图片下载完毕时异步执行
-
+                    context.drawImage( image, y, y, x, x );
                 }
 
             }

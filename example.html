@@ -5,9 +5,6 @@
     <title>QR码测试</title>
     <script src="QRcode.js"></script>
     <style>
-        canvas{
-            border: 0px solid #ccc;
-        }
     </style>
 </head>
 <body>
@@ -19,14 +16,14 @@
     var qrcode=new QRcode();
 
     qrcode.generate({
-        text: "http://ffandii.github.io/Personal-blog",
-        level: "m",     //L:0 M:1 Q:2 H:3
-        size: 380,
+        text: "你好，世界.这是我制作的第一个javascript插件。",
+        level: "h",     //L:0 M:1 Q:2 H:3
+        size: 280,
         foreColor: "#2c8b29",   //前景色默认为黑色
         backColor: "#efefef"   //背景色默认为白色
     },"#myDiv");
 
-    console.log(typeof "");
+    qrcode.embedLogo("logo.png");
 
 //    console.log(new Date().getTime()-startTime);
 
