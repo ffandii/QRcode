@@ -3,8 +3,6 @@
  * Created by ffandii on 2015-10-02.
  */
 
-var QRcode;
-
 (function( window ){
 
     //默认参数设置
@@ -23,7 +21,7 @@ var QRcode;
         parseInt = window.parseInt,
         fromCharCode = String.fromCharCode;
 
-    QRcode = function(){
+    window.QRcode = function(){
 
         this.version = 0;       //默认版本为0,0-39
 
