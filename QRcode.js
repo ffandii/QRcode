@@ -46,10 +46,10 @@
                 var out, i, len, c;
                 out = "";
                 len = str.length;
-                for(i = 0; i < len; i++) {
-                    c = str.charCodeAt(i);
+                for(i = 0; i < len; i++ ) {
+                    c = str.charCodeAt( i );
                     if ((c >= 0x0001) && (c <= 0x007F)) {
-                        out += str.charAt(i);
+                        out += str.charAt( i );
                     } else if (c > 0x07FF) {
                         out += fromCharCode(0xE0 | ((c >> 12) & 0x0F));
                         out += fromCharCode(0x80 | ((c >>  6) & 0x3F));
@@ -66,11 +66,11 @@
 
                 var expColor = /^([#])+([a-zA-Z0-9]{6})+$/g; //验证颜色
 
-                for(var key in set) {
+                for( var key in set ) {
 
                     var value = opt[key], type = typeof value;
 
-                    if(type != "undefined" && type != "function" && type != "object" ){
+                    if(type != "undefined" && type != "function" && type != "object" ) {
                         switch( key ){
                             case "text" : options["text"] = value.toString();
                                 break;
@@ -91,7 +91,7 @@
                     }
                 }
 
-                options["text"]=this.utf16To8( options["text"] );
+                options["text"] = this.utf16To8( options["text"] );
 
             },
 
@@ -237,7 +237,7 @@
 
                         for( n = correct - 1; n >= 0; n-- ) {
                             for( c = 0;c < 8; c++ ) {
-                                errorStream.push(b[n][c]);
+                                errorStream.push( b[n][c] );
                             }
                         }
                     }
@@ -276,14 +276,14 @@
                 num = dataNum[0] << 3;
                 for( i = value; i < real; i++ ) {
                     for( n = 0; n < 8; n++ ) {
-                        final.push(dArr[i][num + n]);
+                        final.push( dArr[i][num + n] );
                     }
                 }
 
                 for( j = 0; j < correct; j++ ) {   //组合数据码字和纠错码字
                     for( i = 0; i < real; i++ ) {
                         for( n = 0; n < 8; n++ ) {
-                            final.push(eArr[i][ ( j << 3) + n ]);
+                            final.push( eArr[i][ ( j << 3) + n ] );
                         }
                     }
                 }
@@ -345,7 +345,7 @@
                 }
 
                 for( i = 0; i <= 7; i++ ) {  //参考图形的初始化
-                    for( j = 0;j <= 7; j++) {
+                    for( j = 0;j <= 7; j++ ) {
                         map[i][j] = map[length - 8 + i][j] = map[i][length - 8 + j] = 0;
                     }
                     map[8][length - 8 + i] = map[length - 8 + i][8] = 0;
