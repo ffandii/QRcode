@@ -34,8 +34,6 @@
 
             this.filmArray = [];    //胶片
 
-            this.qrExist = false;   //二维码图像区域存在的一个标志
-
             this.canvas;            //canvas句柄,定义在initCanvas中
 
         };
@@ -485,15 +483,15 @@
                 imageData.data = data;
                 context.putImageData( imageData, 0, 0 );  //将图像数据重新写回context中
 
-                this.qrExist = true;
-
             },
 
             generate: function( opt, selector ) {
 
                 this.optSet( defaultOpt, this.options, opt );  //参数设置
 
-                this.initCanvas( selector );  //初始化1次
+                if( ! this.canvas ) {
+                    this.initCanvas( selector );  //初始化1次
+                }
 
                 this.createData();     //生成数据码字
 
@@ -512,7 +510,7 @@
                 var size = this.options["size"], context = this.canvas.getContext("2d");
                 var x = size >> 2, y = ( size-x ) >> 1;
 
-                if( this.qrExist == true && typeof src == "string") {
+                if( typeof  this.canvas != "undefined" && typeof src == "string") {
                     var image = new Image();  //创建一个image对象，实现图像的预加载
                     image.src = src;
 
