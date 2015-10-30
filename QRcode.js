@@ -483,6 +483,7 @@
                 imageData.data = data;
                 context.putImageData( imageData, 0, 0 );  //将图像数据重新写回context中
 
+                this.filmArray = [];   //清除胶片
             },
 
             generate: function( opt, selector ) {
