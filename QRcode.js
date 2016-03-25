@@ -1,7 +1,7 @@
 /*
  * QRcode javascript plugin
  * Created by ffandii on 2015-10-02.
- */
+*/
 
 (function( window ){
 
@@ -64,7 +64,7 @@
 
             optSet: function( set, options, opt ) {
 
-                var expColor = /^([#])+([a-zA-Z0-9]{6})+$/g; //验证颜色
+                var expColor = /^#([a-fA-F0-9]{6})$/g; //验证颜色
 
                 for( var key in set ) {
 
